@@ -1,168 +1,114 @@
-# 云聚伙伴平台 - SpringBoot
+# 云聚伙伴平台 (CYQ)
 
-## 模板特点
+基于 Spring Boot 2.7.x 的伙伴社交平台后端服务，支持用户管理、内容发布、互动社交等核心功能。
 
-### 主流框架 & 特性
+## 技术栈
 
-- Spring Boot 2.7.x
-- Spring MVC
-- MyBatis + MyBatis Plus 数据访问（开启分页）
-- Spring Boot 调试工具和项目处理器
-- Spring AOP 切面编程
-- Spring Scheduler 定时任务
-- Spring 事务注解
+| 类别 | 技术 |
+|------|------|
+| 后端框架 | Spring Boot 2.7.x, Spring MVC |
+| 数据访问 | MyBatis Plus (分页), MySQL |
+| 缓存 | Redis, Spring Session |
+| 搜索引擎 | Elasticsearch |
+| 对象存储 | 腾讯云 COS |
+| 接口文档 | Swagger + Knife4j |
+| 工具库 | Hutool, Easy Excel, Apache Commons Lang3, Lombok |
+| 容器化 | Docker |
 
-### 数据存储
+## 项目结构
 
-- MySQL 数据库
-- Redis 内存数据库
-- Elasticsearch 搜索引擎
-- 腾讯云 COS 对象存储
+```
+src/main/java/com/yupi/springbootinit/
+├── annotation/     # 自定义注解（权限校验）
+├── aop/            # AOP 切面（鉴权、日志）
+├── common/         # 通用响应、错误码
+├── config/         # 配置类（跨域、COS、MyBatis、JSON）
+├── constant/       # 常量定义
+├── controller/     # REST 接口
+├── model/          # 实体类、VO、DTO
+├── mapper/         # MyBatis Mapper
+├── service/        # 业务逻辑层
+├── job/            # 定时任务（ES 同步）
+├── generate/       # 代码生成器
+└── utils/          # 工具类
+```
 
-### 工具类
+## 核心功能
 
-- Easy Excel 表格处理
-- Hutool 工具库
-- Apache Commons Lang3 工具类
-- Lombok 注解
+- **用户系统** — 注册、登录、注销、权限管理（user/admin/ban）
+- **内容管理** — 帖子 CRUD、标签、数据库检索 + ES 灵活检索
+- **社交互动** — 点赞/取消点赞、收藏/取消收藏
+- **数据同步** — 帖子全量/增量同步到 Elasticsearch
+- **第三方集成** — 微信开放平台登录、微信公众号消息
+- **文件上传** — 分业务文件上传（腾讯云 COS）
 
-### 业务特性
+## 快速开始
 
-- 业务代码生成器（支持自动生成 Service、Controller、数据模型代码）
-- Spring Session Redis 分布式登录
-- 全局请求响应拦截器（记录日志）
-- 全局异常处理器
-- 自定义错误码
-- 封装通用响应类
-- Swagger + Knife4j 接口文档
-- 自定义权限注解 + 全局校验
-- 全局跨域处理
-- 长整数丢失精度解决
-- 多环境配置
+### 环境要求
 
+- JDK 1.8+
+- Maven 3.6+
+- MySQL 5.7+
+- Redis（可选，用于分布式 Session）
+- Elasticsearch（可选，用于全文检索）
 
-## 业务功能
+### 1. 数据库初始化
 
-- 提供示例 SQL（用户、帖子、帖子点赞、帖子收藏表）
-- 用户登录、注册、注销、更新、检索、权限管理
-- 帖子创建、删除、编辑、更新、数据库检索、ES 灵活检索
-- 帖子点赞、取消点赞
-- 帖子收藏、取消收藏、检索已收藏帖子
-- 帖子全量同步 ES、增量同步 ES 定时任务
-- 支持微信开放平台登录
-- 支持微信公众号订阅、收发消息、设置菜单
-- 支持分业务的文件上传
+```bash
+mysql -u root -p < sql/create_table.sql
+```
 
-### 单元测试
+### 2. 修改配置
 
-- JUnit5 单元测试
-- 示例单元测试类
+编辑 `src/main/resources/application.yml`，配置数据库连接：
 
-### 架构设计
-
-- 合理分层
-
-
-### MySQL 数据库
-
-1）修改 `application.yml` 的数据库配置：
-
-```yml
+```yaml
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/my_db
     username: root
-    password: 123456
+    password: your_password
 ```
 
-2）执行 `sql/create_table.sql` 中的数据库语句，自动创建库表
+### 3. 启动服务
 
-3）启动项目，访问 `http://localhost:8101/api/doc.html` ，可打开接口文档
+```bash
+mvn spring-boot:run
 
-![](doc/swagger.png)
-
-### Redis 分布式登录
-
-1）修改 `application.yml` 的 Redis 配置：
-
-```yml
-spring:
-  redis:
-    database: 1
-    host: localhost
-    port: 6379
-    timeout: 5000
-    password: 123456
+# 或打包后运行
+mvn package -DskipTests
+java -jar target/springboot-init-0.0.1-SNAPSHOT.jar
 ```
 
-2）修改 `application.yml` 中的 session 存储方式：
+### 4. 访问接口文档
 
-```yml
-spring:
-  session:
-    store-type: redis
+启动后访问：`http://localhost:8101/api/doc.html`
+
+### Docker 部署
+
+```bash
+docker build -t cyq .
+docker run -p 8101:8101 cyq
 ```
 
-3）移除 `MainApplication` 类开头 `@SpringBootApplication` 注解内的 exclude 参数：
+## API 概览
 
-修改前：
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/user/register` | POST | 用户注册 |
+| `/api/user/login` | POST | 用户登录 |
+| `/api/user/logout` | POST | 用户注销 |
+| `/api/user/update` | PUT | 更新用户信息 |
+| `/api/user/search` | GET | 搜索用户（管理员） |
+| `/api/post/add` | POST | 发布帖子 |
+| `/api/post/delete` | POST | 删除帖子 |
+| `/api/post/update` | PUT | 编辑帖子 |
+| `/api/post/get` | GET | 获取帖子详情 |
+| `/api/post/list/page` | GET | 分页查询帖子 |
+| `/api/post/search/page` | GET | ES 搜索帖子 |
+| `/api/post_thumb/` | POST | 点赞/取消点赞 |
+| `/api/post_favour/` | POST | 收藏/取消收藏 |
 
-```java
-@SpringBootApplication(exclude = {RedisAutoConfiguration.class})
-```
+## 致谢
 
-修改后：
-
-
-```java
-@SpringBootApplication
-```
-
-### Elasticsearch 搜索引擎
-
-1）修改 `application.yml` 的 Elasticsearch 配置为你自己的：
-
-```yml
-spring:
-  elasticsearch:
-    uris: http://localhost:9200
-    username: root
-    password: 123456
-```
-
-2）复制 `sql/post_es_mapping.json` 文件中的内容，通过调用 Elasticsearch 的接口或者 Kibana Dev Tools 来创建索引（相当于数据库建表）
-
-```
-PUT post_v1
-{
- 参数见 sql/post_es_mapping.json 文件
-}
-```
-
-这步不会操作的话需要补充下 Elasticsearch 的知识，或者自行百度一下~
-
-3）开启同步任务，将数据库的帖子同步到 Elasticsearch
-
-找到 job 目录下的 `FullSyncPostToEs` 和 `IncSyncPostToEs` 文件，取消掉 `@Component` 注解的注释，再次执行程序即可触发同步：
-
-```java
-// todo 取消注释开启任务
-//@Component
-```
-
-### 业务代码生成器
-
-支持自动生成 Service、Controller、数据模型代码，配合 MyBatisX 插件，可以快速开发增删改查等实用基础功能。
-
-找到 `generate.CodeGenerator` 类，修改生成参数和生成路径，并且支持注释掉不需要的生成逻辑，然后运行即可。
-
-```
-// 指定生成参数
-String packageName = "com.yupi.springbootinit";
-String dataName = "用户评论";
-String dataKey = "userComment";
-String upperDataKey = "UserComment";
-```
-
-生成代码后，可以移动到实际项目中，并且按照 `// todo` 注释的提示来针对自己的业务需求进行修改。
+项目基于 [程序员鱼皮](https://github.com/liyupi) 的 [springboot-init](https://github.com/liyupi/springboot-init) 模板开发。
